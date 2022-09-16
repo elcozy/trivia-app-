@@ -11,9 +11,8 @@ function App() {
         <Link to="/">Home</Link>
         <Routes>
           <Route path="/" element={<Categories />} />
-          <Route path="/users" element={<div>Users</div>} />
           <Route path="/category/:category" element={<CategoryPage />} />
-          <Route path="*" element={<div>PAge not found</div>} />
+          <Route path="*" element={<div>Page not found</div>} />
         </Routes>
         <footer>Trivia App Footer</footer>
       </div>

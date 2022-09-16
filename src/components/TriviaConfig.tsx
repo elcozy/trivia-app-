@@ -24,62 +24,67 @@ export const TriviaConfig: React.FC<TTriviaConfig> = ({
   setTags,
   getQuestions,
 }) => {
-  console.log("TriviaConfig");
   return (
-    <div className="category_setting">
-      <label htmlFor="drop-down1">Question Region:</label>
-      <select
-        name="drop-down1"
-        id="drop-down"
-        value={region}
-        onChange={(e) => setRegion(e.target.value)}
-      >
-        <option disabled value="">
-          -- select an option --
-        </option>
-
-        {isoForCountries.map((iso) => (
-          <option key={iso?.code} value={iso?.code}>
-            {iso?.name}
+    <div className="category__settings">
+      <div className="category__settings-item">
+        <label htmlFor="drop-down1">Question Region:</label>
+        <select
+          name="drop-down1"
+          id="drop-down"
+          value={region}
+          onChange={(e) => setRegion(e.target.value)}
+        >
+          <option disabled value="">
+            -- select a region --
           </option>
-        ))}
-      </select>
-      <label htmlFor="drop-down">Difficulty:</label>
 
-      <select
-        name="drop-down"
-        id="drop-down"
-        value={difficulty}
-        onChange={(e) => setDifficulty(e.target.value)}
-      >
-        <option disabled value="">
-          -- select an option --
-        </option>
-        {["easy", "medium", "hard"].map((diff) => (
-          <option key={diff} value={diff}>
-            {diff}
+          {isoForCountries.map((iso) => (
+            <option key={iso?.code} value={iso?.code}>
+              {iso?.name}
+            </option>
+          ))}
+        </select>
+      </div>
+      <div className="category__settings-item">
+        <label htmlFor="drop-down">Difficulty:</label>
+        <select
+          name="drop-down"
+          id="drop-down"
+          value={difficulty}
+          onChange={(e) => setDifficulty(e.target.value)}
+        >
+          <option disabled value="">
+            -- select a difficulty --
           </option>
-        ))}
-      </select>
-      <label htmlFor="drop-down2">How many questions?</label>
-      <select
-        name="drop-down2"
-        id="drop-down"
-        value={limit}
-        onChange={(e) => setLimit(e.target.value)}
-      >
-        <option disabled value="">
-          -- select an option --
-        </option>
-        {Array(20)
-          .fill(1)
-          .map((x, y) => x + y)
-          ?.map((diff: number) => (
-            <option key={diff} value={diff?.toLocaleString()}>
+          {["easy", "medium", "hard"].map((diff) => (
+            <option key={diff} value={diff}>
               {diff}
             </option>
           ))}
-      </select>
+        </select>
+      </div>
+      <div className="category__settings-item">
+        <label htmlFor="drop-down2">How many questions?</label>
+        <select
+          name="drop-down2"
+          id="drop-down"
+          value={limit}
+          onChange={(e) => setLimit(e.target.value)}
+        >
+          <option disabled value="">
+            -- select a country --
+          </option>
+          {Array(20)
+            .fill(1)
+            .map((x, y) => x + y)
+            ?.map((diff: number) => (
+              <option key={diff} value={diff?.toLocaleString()}>
+                {diff}
+              </option>
+            ))}
+        </select>
+      </div>
+
       <button onClick={getQuestions}>Search</button>
     </div>
   );

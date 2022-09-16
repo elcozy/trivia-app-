@@ -26,9 +26,30 @@
   box-shadow: 2.9px 5.8px 5.8px rgba(0, 0, 0, 0.41);
   cursor: pointer;
 }
+
+.category__settings {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.category__settings-item {
+  display: flex;
+  gap: 15px;
+}
+/* .category__settings button { */
+button {
+  margin: auto;
+  width: 200px;
+  height: 30px;
+  cursor: pointer;
+  background: coral;
+  border: 0;
+}
 .question__list {
   display: flex;
   flex-wrap: wrap;
+  padding: 20px;
   gap: 20px;
 }
 

@@ -45,16 +45,14 @@ export const CategoryPage: React.FC<TCategoryPage> = () => {
   const [score, setScore] = useState<any>("2/5");
 
   const [questionNumber, setQuestionNumber] = useState<number>(0);
-  const currentQuestionObj = data?.[questionNumber];
 
+  const question = data?.[questionNumber]?.question;
   const randomPosition = Math.floor(Math.random() * 4);
   const incorrectAnswer = data?.[questionNumber]?.incorrectAnswers || [];
   const correctAnswer = data?.[questionNumber]?.correctAnswer;
 
   const answers = [...incorrectAnswer];
   answers?.splice(randomPosition, 0, data?.[questionNumber]?.correctAnswer);
-
-  console.log(randomPosition);
 
   const getQuestions = () => {
     setLoading(true);
@@ -92,9 +90,6 @@ export const CategoryPage: React.FC<TCategoryPage> = () => {
 
   if (!data || loading) return <div>Loading...</div>;
   if (errorMessage) return <div>{errorMessage}</div>;
-
-  // let currentQuestionObj = data?.[questionNumber - 1] || {};
-  const question = currentQuestionObj?.question;
 
   const selectAnswer = (e: string) => {
     const newSelection = [...selectedAnswers];
