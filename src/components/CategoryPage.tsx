@@ -1,11 +1,7 @@
 import React, { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
-import {
-  fetchCategories,
-  fetchQuestions,
-  TFetchQuestions,
-} from "../helpers/fetchHelper";
-import { isoForCountries } from "../isoCountries";
+import { useParams } from "react-router-dom";
+import { fetchQuestions, TFetchQuestions } from "../helpers/fetchHelper";
+import { TriviaConfig } from "./TriviaConfig";
 
 type TCategoryPage = {};
 
@@ -34,7 +30,6 @@ TFetchQuestions) => {
 };
 
 export const CategoryPage: React.FC<TCategoryPage> = () => {
-  const navigate = useNavigate();
   const { category = "" } = useParams();
 
   const [data, setData] = useState<any>([]);
@@ -46,123 +41,120 @@ export const CategoryPage: React.FC<TCategoryPage> = () => {
   const [limit, setLimit] = useState<string>("");
   const [tags, setTags] = useState<string>("");
 
+  const [selectedAnswers, setSelectedAnswers] = useState<any[]>([]);
+  const [score, setScore] = useState<any>("2/5");
+
+  const [questionNumber, setQuestionNumber] = useState<number>(0);
+  const currentQuestionObj = data?.[questionNumber];
+
+  const randomPosition = Math.floor(Math.random() * 4);
+  const incorrectAnswer = data?.[questionNumber]?.incorrectAnswers || [];
+  const correctAnswer = data?.[questionNumber]?.correctAnswer;
+
+  const answers = [...incorrectAnswer];
+  answers?.splice(randomPosition, 0, data?.[questionNumber]?.correctAnswer);
+
+  console.log(randomPosition);
+
   const getQuestions = () => {
     setLoading(true);
     fetchQuestions({ categories: category, difficulty, limit, region, tags })
       .then((data) => {
         setData(data);
         setLoading(false);
+        setQuestionNumber(0);
+        setSelectedAnswers([]);
       })
       .catch((error) => setErrorMessage(error));
   };
 
-  const selectAnswer = (e) => {
-    console.log("answer selected =>", e);
-  };
   useEffect(() => {
     getQuestions();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [category]);
 
   useEffect(() => {
-    console.log(difficulty, region, limit);
-  }, [difficulty, region, limit]);
+    const falseNb = selectedAnswers.reduce(
+      (n, e) => (e.grade === "pass" ? n + 1 : n),
+      0
+    );
+    function percentage(partialValue, totalValue) {
+      return ((100 * partialValue) / totalValue).toFixed(2);
+    }
 
-  // const goToPath = (p: any) => {
-  //   const dataP: any = data[p];
-  //   const lastString: string = dataP[dataP.length - 1] || "";
-  //   let regex = /_/g;
-  //   let result = lastString?.replace(regex, "-");
+    const scoreSetter = `${falseNb} / ${data?.length} -- ${percentage(
+      falseNb,
+      data?.length
+    )}%`;
+    setScore(scoreSetter);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedAnswers]);
 
-  //   console.log(dataP, lastString);
-  //   navigate(`/category/${result}`);
-  // };
-
-  console.log("Categories", data);
-  if (loading) return <div>Loading...</div>;
+  if (!data || loading) return <div>Loading...</div>;
   if (errorMessage) return <div>{errorMessage}</div>;
+
+  // let currentQuestionObj = data?.[questionNumber - 1] || {};
+  const question = currentQuestionObj?.question;
+
+  const selectAnswer = (e: string) => {
+    const newSelection = [...selectedAnswers];
+
+    newSelection.push({
+      question,
+      selected: e,
+      correct: correctAnswer,
+      grade: e === correctAnswer ? "pass" : "fail",
+    });
+
+    setSelectedAnswers(newSelection);
+    setQuestionNumber(questionNumber + 1);
+  };
 
   return (
     <div className="category">
       <header>Category Page </header>
-      <div className="category_setting">
-        <label htmlFor="drop-down1">Question Region:</label>
-        <select
-          name="drop-down1"
-          id="drop-down"
-          value={region}
-          onChange={(e) => setRegion(e.target.value)}
-        >
-          <option disabled value="">
-            -- select an option --
-          </option>
-
-          {isoForCountries.map((iso) => (
-            <option key={iso?.code} value={iso?.code}>
-              {iso?.name}
-            </option>
-          ))}
-        </select>
-        <label htmlFor="drop-down">Difficulty:</label>
-
-        <select
-          name="drop-down"
-          id="drop-down"
-          value={difficulty}
-          onChange={(e) => setDifficulty(e.target.value)}
-        >
-          <option disabled value="">
-            -- select an option --
-          </option>
-          {["easy", "medium", "hard"].map((diff) => (
-            <option key={diff} value={diff}>
-              {diff}
-            </option>
-          ))}
-        </select>
-        <label htmlFor="drop-down2">How many questions?</label>
-        <select
-          name="drop-down2"
-          id="drop-down"
-          value={limit}
-          onChange={(e) => setLimit(e.target.value)}
-        >
-          <option disabled value="">
-            -- select an option --
-          </option>
-          {Array(20)
-            .fill(1)
-            .map((x, y) => x + y)
-            ?.map((diff: number) => (
-              <option key={diff} value={diff?.toLocaleString()}>
-                {diff}
-              </option>
-            ))}
-        </select>
-        <button onClick={getQuestions}>Search</button>
+      <div className="">
+        <TriviaConfig
+          difficulty={difficulty}
+          setDifficulty={setDifficulty}
+          region={region}
+          setRegion={setRegion}
+          limit={limit}
+          setLimit={setLimit}
+          tags={tags}
+          setTags={setTags}
+          getQuestions={getQuestions}
+        />
         {category}
-        {data?.map((q) => {
-          const randomPosition = Math.floor(Math.random() * 4);
-          const answers = [...q?.incorrectAnswers];
-          answers?.splice(randomPosition, 0, q?.correctAnswer);
 
-          return (
-            <div className="question__block" key={answers[randomPosition]}>
-              <div>{q.question}</div>
+        {questionNumber === data?.length ? (
+          <>
+            <div className="result">{score}</div>
+            <button onClick={getQuestions}>Restart</button>
+          </>
+        ) : (
+          <>
+            <h2>
+              Question {questionNumber + 1} / {data?.length}
+            </h2>
+            <div className="question__block">
+              <div>{question}</div>
               <br />
               <p>answers</p>
-              <ul>
-                {/* // ?.splice(1, 0, `${q?.correctAnswer}`) */}
-                {answers?.map((ans: string) => (
-                  <li key={ans} onClick={(e) => selectAnswer(ans?.trim())}>
+              <ul className="question__list">
+                {answers?.map((ans: string, i: number) => (
+                  <li
+                    key={`${ans?.trim()}${i}`}
+                    onClick={() => selectAnswer(ans?.trim())}
+                  >
                     {ans?.trim()}
                   </li>
                 ))}
               </ul>
               <hr />
             </div>
-          );
-        })}
+          </>
+        )}
       </div>
     </div>
   );

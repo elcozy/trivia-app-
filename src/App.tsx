@@ -7,6 +7,7 @@ function App() {
   return (
     <Router>
       <div className="App">
+        <header>Trivia App</header>
         <Link to="/">Home</Link>
         <Routes>
           <Route path="/" element={<Categories />} />
@@ -14,6 +15,7 @@ function App() {
           <Route path="/category/:category" element={<CategoryPage />} />
           <Route path="*" element={<div>PAge not found</div>} />
         </Routes>
+        <footer>Trivia App Footer</footer>
       </div>
     </Router>
   );

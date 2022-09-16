@@ -26,3 +26,23 @@
   box-shadow: 2.9px 5.8px 5.8px rgba(0, 0, 0, 0.41);
   cursor: pointer;
 }
+.question__list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.question__list li {
+  width: 48%;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid sandybrown;
+  background: coral;
+}
+
+.question__list li:hover {
+  background: rgba(255, 127, 80, 0.712);
+  cursor: pointer;
+}
