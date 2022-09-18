@@ -21,32 +21,9 @@ const useCategories = () => {
   return { data, loading, errorMessage };
 };
 
-const useQuestions = () => {
-  const [data, setData] = useState<any>([]);
-  const [loading, setLoading] = useState<boolean>(false);
-  const [errorMessage, setErrorMessage] = useState<string>("");
-
-  useEffect(() => {
-    setLoading(true);
-    fetchQuestions({})
-      .then((data) => {
-        setData(data);
-        setLoading(false);
-      })
-      .catch((error) => setErrorMessage(error));
-  }, []);
-
-  return { data, loading, errorMessage };
-};
-
 export const Categories: React.FC<TCategories> = () => {
   const navigate = useNavigate();
   const { data, loading, errorMessage } = useCategories();
-  //   const {
-  //     data: questionData,
-  //     loading: questionLoading,
-  //     errorMessage: quetionError,
-  //   } = useQuestions();
 
   const goToPath = (p: any) => {
     const dataP: any = data[p];
@@ -63,6 +40,7 @@ export const Categories: React.FC<TCategories> = () => {
   return (
     <>
       <header>Categories</header>
+      <h2>Choose a category:</h2>
       <div className="categories">
         {Object.keys(data).map((title: any) => (
           <div

@@ -36,8 +36,8 @@ export const ProgressBar: React.FC<TProgressbar> = ({
   const delayInMs = (delay * 1000) / 100; //ms
 
   useInterval(() => {
-    // setPercent(percent + 1);
-    updateProgress && updatePercent(percent + 1);
+    updatePercent(percent + 1);
+    // updateProgress && updatePercent(percent + 1);
   }, delayInMs);
 
   return (

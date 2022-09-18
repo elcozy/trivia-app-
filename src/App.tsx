@@ -7,10 +7,14 @@ function App() {
   return (
     <Router>
       <div className="App">
-        <header>Trivia App</header>
-        <Link to="/">Home</Link>
+        <nav>
+          <header>Trivia App</header>
+          <Link to="/">Home</Link>
+          <Link to="#">How To Play</Link>
+        </nav>
         <Routes>
           <Route path="/" element={<Categories />} />
+          <Route path="/how-to-play" element={<div>How to Play</div>} />
           <Route path="/category/:category" element={<CategoryPage />} />
           <Route path="*" element={<div>Page not found</div>} />
         </Routes>

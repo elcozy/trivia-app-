@@ -2,28 +2,17 @@ import React from "react";
 import { isoForCountries } from "../isoCountries";
 
 type TTriviaConfig = {
-  difficulty: any;
-  setDifficulty: any;
-  region: any;
-  setRegion: any;
-  limit: any;
-  setLimit: any;
-  tags: any;
-  setTags: any;
   getQuestions: any;
+  data?: any;
+  setData?: any;
 };
 
 export const TriviaConfig: React.FC<TTriviaConfig> = ({
-  difficulty,
-  setDifficulty,
-  region,
-  setRegion,
-  limit,
-  setLimit,
-  tags,
-  setTags,
   getQuestions,
+  data,
+  setData,
 }) => {
+  const { difficulty, region, limit, tags } = data;
   return (
     <div className="category__settings">
       <div className="category__settings-item">
@@ -32,7 +21,7 @@ export const TriviaConfig: React.FC<TTriviaConfig> = ({
           name="drop-down1"
           id="drop-down"
           value={region}
-          onChange={(e) => setRegion(e.target.value)}
+          onChange={(e) => setData("region", e.target.value)}
         >
           <option disabled value="">
             -- select a region --
@@ -51,7 +40,7 @@ export const TriviaConfig: React.FC<TTriviaConfig> = ({
           name="drop-down"
           id="drop-down"
           value={difficulty}
-          onChange={(e) => setDifficulty(e.target.value)}
+          onChange={(e) => setData("difficulty", e.target.value)}
         >
           <option disabled value="">
             -- select a difficulty --
@@ -69,10 +58,10 @@ export const TriviaConfig: React.FC<TTriviaConfig> = ({
           name="drop-down2"
           id="drop-down"
           value={limit}
-          onChange={(e) => setLimit(e.target.value)}
+          onChange={(e) => setData("limit", e.target.value)}
         >
           <option disabled value="">
-            -- select a country --
+            -- select number of questions --
           </option>
           {Array(20)
             .fill(1)

@@ -1,53 +1,32 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
-import { fetchQuestions, TFetchQuestions } from "../helpers/fetchHelper";
+import { useNavigate, useParams } from "react-router-dom";
+import { fetchQuestions } from "../helpers/fetchHelper";
 import { TriviaConfig } from "./TriviaConfig";
-import { Line, Circle } from "rc-progress";
 import { ProgressBar } from "./Progressbar";
+import { Question } from "./Question";
 
 type TCategoryPage = {};
 
-const useQuestions = ({
-  categories = "",
-  difficulty,
-  limit,
-  region,
-}: // tags,
-TFetchQuestions) => {
-  const [data, setData] = useState<any>([]);
-  const [loading, setLoading] = useState<boolean>(false);
-  const [errorMessage, setErrorMessage] = useState<string>("");
-
-  useEffect(() => {
-    setLoading(true);
-    fetchQuestions({ categories })
-      .then((data) => {
-        setData(data);
-        setLoading(false);
-      })
-      .catch((error) => setErrorMessage(error));
-  }, [categories]);
-
-  return { data, loading, errorMessage };
-};
-
 export const CategoryPage: React.FC<TCategoryPage> = () => {
   const { category = "" } = useParams();
+  const navigate = useNavigate();
 
-  // const [data, setData] = useState<any>([]);
-  //
   const [data, setData] = useState<any>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string>("");
+  const [fetchedData, setFetchedData] = useState<any>({
+    difficulty: "",
+    region: "",
+    limit: "",
+    tags: "",
+  });
 
-  const [difficulty, setDifficulty] = useState<string>("");
-  const [region, setRegion] = useState<string>("");
-  const [limit, setLimit] = useState<string>("");
-  const [tags, setTags] = useState<string>("");
   const [percent, setPercent] = useState<number>(0);
+
   const [selectedAnswers, setSelectedAnswers] = useState<any[]>([]);
-  const [score, setScore] = useState<any>("");
+  const [grade, setGrade] = useState<string>("");
+  const [scoreText, setScoreText] = useState<string>("");
   const [updateProgress, setUpdateProgress] = useState<boolean>(true);
   const [questionNumber, setQuestionNumber] = useState<number>(0);
   const [randomPosition, setRandomPosition] = useState<number>(
@@ -63,15 +42,25 @@ export const CategoryPage: React.FC<TCategoryPage> = () => {
 
   const totalQuestions: number = data?.length;
 
+  const { difficulty, region, limit, tags } = fetchedData;
+
+  const progressHault = () => setUpdateProgress(!updateProgress);
+  const updateFetchState = (name: string, content: string) => {
+    setFetchedData({ ...fetchedData, [name]: content });
+  };
+
+  const resetTrivia = () => {
+    setQuestionNumber(0);
+    setSelectedAnswers([]);
+    setPercent(0);
+  };
   const getQuestions = () => {
     setLoading(true);
     fetchQuestions({ categories: category, difficulty, limit, region, tags })
       .then((data) => {
         setData(data);
         setLoading(false);
-        setQuestionNumber(0);
-        setSelectedAnswers([]);
-        setPercent(0);
+        resetTrivia();
       })
       .catch((error) => setErrorMessage(error));
   };
@@ -87,9 +76,21 @@ export const CategoryPage: React.FC<TCategoryPage> = () => {
       (n, e) => (e.grade === "pass" ? n + 1 : n),
       0
     );
-    const percentage = ((100 * failedQuestions) / totalQuestions).toFixed(2);
+    const percentage: number = parseFloat(
+      ((100 * failedQuestions) / totalQuestions).toFixed(2)
+    );
 
-    setScore(`${failedQuestions} / ${totalQuestions} -- ${percentage}%`);
+    const grading =
+      percentage < 50
+        ? "fail"
+        : percentage > 50 && percentage < 70
+        ? "pass"
+        : percentage > 70
+        ? "great"
+        : "";
+
+    setGrade(grading);
+    setScoreText(`${failedQuestions} / ${totalQuestions} -- ${percentage}%`);
   };
 
   const selectAnswer = (e: string) => {
@@ -106,7 +107,7 @@ export const CategoryPage: React.FC<TCategoryPage> = () => {
     setQuestionNumber((questionNumber) => questionNumber + 1);
     setRandomPosition(Math.floor(Math.random() * 4));
   };
-  useEffect(() => getQuestions(), [category]);
+  // useEffect(() => getQuestions(), [category]);
 
   useEffect(() => updateScores(), [selectedAnswers]);
 
@@ -115,60 +116,53 @@ export const CategoryPage: React.FC<TCategoryPage> = () => {
 
   return (
     <div className="category">
-      <header>Category Page </header>
+      <header>Category : {category} </header>
+      <h2>Trivia Settings</h2>
       <div className="">
-        <TriviaConfig
-          difficulty={difficulty}
-          setDifficulty={setDifficulty}
-          region={region}
-          setRegion={setRegion}
-          limit={limit}
-          setLimit={setLimit}
-          tags={tags}
-          setTags={setTags}
-          getQuestions={getQuestions}
-        />
-        {category}
+        {(!totalQuestions || questionNumber === totalQuestions) && (
+          <TriviaConfig
+            getQuestions={getQuestions}
+            data={fetchedData}
+            setData={updateFetchState}
+          />
+        )}
+
         <ProgressBar
           percent={percent}
           updatePercent={updateProgressBar}
           changeTrigger={questionNumber}
           setPercent={setPercent}
-          delay={2}
+          delay={10}
           updateProgress={updateProgress}
         />
-        <button onClick={() => setUpdateProgress(!updateProgress)}>
+        {/* For testing purpose */}
+        {/* <button onClick={() => progressHault()}>
           start/ stop progress
-        </button>
+        </button> */}
 
-        {questionNumber === totalQuestions ? (
-          <>
-            <div className="result">{score}</div>
-            <button onClick={getQuestions}>Restart Quiz</button>
-          </>
-        ) : (
-          <>
-            <h2>
-              Question {questionNumber + 1} / {totalQuestions}
-            </h2>
-            <div className="question__block">
-              <div>{question}</div>
+        {!!totalQuestions &&
+          (questionNumber === totalQuestions ? (
+            <>
+              <div className={`result ${grade}`}>Score : {scoreText}</div>
+              <button onClick={getQuestions}>Restart Quiz</button>
               <br />
-              <p>answers</p>
-              <ul className="question__list">
-                {answers?.map((ans: string, i: number) => (
-                  <li
-                    key={`${ans?.trim()}${i}`}
-                    onClick={() => selectAnswer(ans?.trim())}
-                  >
-                    {ans?.trim()}
-                  </li>
-                ))}
-              </ul>
-              <hr />
-            </div>
-          </>
-        )}
+              <br />
+              <button onClick={() => navigate("/")}>
+                Choose another Category
+              </button>
+            </>
+          ) : (
+            <>
+              <h2>
+                Question {questionNumber + 1} / {totalQuestions}
+              </h2>
+              <Question
+                question={question}
+                answers={answers}
+                selectAnswer={selectAnswer}
+              />
+            </>
+          ))}
       </div>
     </div>
   );
