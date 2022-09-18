@@ -80,10 +80,13 @@ select {
 button {
   margin: auto;
   width: 200px;
-  height: 30px;
   cursor: pointer;
-  background: coral;
+  background: rgba(0, 0, 0, 0.681);
+  color: white;
+  border-radius: 5px;
   border: 0;
+  font-weight: bold;
+  padding: 10px;
 }
 .question__list {
   display: flex;
@@ -98,12 +101,16 @@ button {
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid sandybrown;
-  background: coral;
+  border: 10;
+  background: rgba(0, 0, 0, 0.681);
+  color: white;
+  border-radius: 5px;
+  font-weight: bold;
 }
 
 .question__list li:hover {
-  background: rgba(255, 127, 80, 0.712);
+  background: rgba(0, 0, 0, 0.528);
+
   cursor: pointer;
 }
 /* .rc-progress-line-path {
