@@ -1,8 +1,10 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { fetchQuestions, TFetchQuestions } from "../helpers/fetchHelper";
 import { TriviaConfig } from "./TriviaConfig";
 import { Line, Circle } from "rc-progress";
+import { ProgressBar } from "./Progressbar";
 
 type TCategoryPage = {};
 
@@ -33,6 +35,8 @@ TFetchQuestions) => {
 export const CategoryPage: React.FC<TCategoryPage> = () => {
   const { category = "" } = useParams();
 
+  // const [data, setData] = useState<any>([]);
+  //
   const [data, setData] = useState<any>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string>("");
@@ -44,7 +48,7 @@ export const CategoryPage: React.FC<TCategoryPage> = () => {
   const [percent, setPercent] = useState<number>(0);
   const [selectedAnswers, setSelectedAnswers] = useState<any[]>([]);
   const [score, setScore] = useState<any>("");
-
+  const [updateProgress, setUpdateProgress] = useState<boolean>(true);
   const [questionNumber, setQuestionNumber] = useState<number>(0);
   const [randomPosition, setRandomPosition] = useState<number>(
     Math.floor(Math.random() * 4)
@@ -57,8 +61,7 @@ export const CategoryPage: React.FC<TCategoryPage> = () => {
   const answers = [...incorrectAnswer];
   answers?.splice(randomPosition, 0, data?.[questionNumber]?.correctAnswer);
 
-  const totalDelaySec = 10; //5000ms
-  const delay = (totalDelaySec * 1000) / 100; //ms
+  const totalQuestions: number = data?.length;
 
   const getQuestions = () => {
     setLoading(true);
@@ -68,101 +71,30 @@ export const CategoryPage: React.FC<TCategoryPage> = () => {
         setLoading(false);
         setQuestionNumber(0);
         setSelectedAnswers([]);
-        // updateProgress();
         setPercent(0);
       })
       .catch((error) => setErrorMessage(error));
   };
 
-  let tm: NodeJS.Timeout;
-
-  const updateProgress = () => {
-    console.log(
-      "%cCategoryPage.tsx line:80 delay, per",
-      "color: #007acc;",
-      delay,
-      percent
-    );
-
-    if (percent >= 100) {
-      clearTimeout(tm);
-      return;
-    }
-    if (questionNumber < data?.length) {
-      clearTimeout(tm);
-      return;
-    }
-    setPercent((percent) => {
-      if (percent < 100) {
-        return percent + 1;
-      } else {
-        return percent;
-      }
-    });
-    tm = setTimeout(updateProgress, delay);
-  };
-
-  const restartProgress = () => {
-    clearTimeout(tm);
-    setPercent(0);
-    if (questionNumber + 1 <= data?.length) return;
-
-    updateProgress();
-  };
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setPercent((percent) => {
-        if (percent < 100) {
-          return percent + 1;
-        } else {
-          return percent;
-        }
-      });
-    }, delay);
-    return () => clearInterval(interval);
-  }, [questionNumber]);
-
-  useEffect(() => {
-    // updateProgress();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  useEffect(() => {
+  const updateProgressBar = (newPercent: number) => {
+    const updateCriteria = newPercent <= 100 && questionNumber < totalQuestions;
+    if (updateCriteria) setPercent(newPercent);
     if (percent === 100) selectAnswer("");
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [percent]);
+  };
 
-  useEffect(() => {
-    getQuestions();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [category]);
-
-  useEffect(() => {
-    const falseNb = selectedAnswers.reduce(
+  const updateScores = () => {
+    const failedQuestions = selectedAnswers.reduce(
       (n, e) => (e.grade === "pass" ? n + 1 : n),
       0
     );
-    function percentage(partialValue, totalValue) {
-      return ((100 * partialValue) / totalValue).toFixed(2);
-    }
+    const percentage = ((100 * failedQuestions) / totalQuestions).toFixed(2);
 
-    const scoreSetter = `${falseNb} / ${data?.length} -- ${percentage(
-      falseNb,
-      data?.length
-    )}%`;
-    setScore(scoreSetter);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedAnswers]);
-
-  if (!data || loading) return <div>Loading...</div>;
-  if (errorMessage) return <div>{errorMessage}</div>;
+    setScore(`${failedQuestions} / ${totalQuestions} -- ${percentage}%`);
+  };
 
   const selectAnswer = (e: string) => {
-    if (questionNumber + 2 <= data?.length) restartProgress();
-
+    setPercent(0);
     const newSelection = [...selectedAnswers];
-
     newSelection.push({
       question,
       selected: e,
@@ -174,6 +106,12 @@ export const CategoryPage: React.FC<TCategoryPage> = () => {
     setQuestionNumber((questionNumber) => questionNumber + 1);
     setRandomPosition(Math.floor(Math.random() * 4));
   };
+  useEffect(() => getQuestions(), [category]);
+
+  useEffect(() => updateScores(), [selectedAnswers]);
+
+  if (loading) return <div>Loading...</div>;
+  if (errorMessage) return <div>{errorMessage}</div>;
 
   return (
     <div className="category">
@@ -191,16 +129,27 @@ export const CategoryPage: React.FC<TCategoryPage> = () => {
           getQuestions={getQuestions}
         />
         {category}
-        <Line percent={percent} strokeWidth={1} strokeColor="green" />
-        {questionNumber === data?.length ? (
+        <ProgressBar
+          percent={percent}
+          updatePercent={updateProgressBar}
+          changeTrigger={questionNumber}
+          setPercent={setPercent}
+          delay={2}
+          updateProgress={updateProgress}
+        />
+        <button onClick={() => setUpdateProgress(!updateProgress)}>
+          start/ stop progress
+        </button>
+
+        {questionNumber === totalQuestions ? (
           <>
             <div className="result">{score}</div>
-            <button onClick={getQuestions}>Restart</button>
+            <button onClick={getQuestions}>Restart Quiz</button>
           </>
         ) : (
           <>
             <h2>
-              Question {questionNumber + 1} / {data?.length}
+              Question {questionNumber + 1} / {totalQuestions}
             </h2>
             <div className="question__block">
               <div>{question}</div>
