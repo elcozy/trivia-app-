@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { fetchQuestions, TFetchQuestions } from "../helpers/fetchHelper";
 import { TriviaConfig } from "./TriviaConfig";
+import { Line, Circle } from "rc-progress";
 
 type TCategoryPage = {};
 
@@ -40,19 +41,24 @@ export const CategoryPage: React.FC<TCategoryPage> = () => {
   const [region, setRegion] = useState<string>("");
   const [limit, setLimit] = useState<string>("");
   const [tags, setTags] = useState<string>("");
-
+  const [percent, setPercent] = useState<number>(0);
   const [selectedAnswers, setSelectedAnswers] = useState<any[]>([]);
-  const [score, setScore] = useState<any>("2/5");
+  const [score, setScore] = useState<any>("");
 
   const [questionNumber, setQuestionNumber] = useState<number>(0);
+  const [randomPosition, setRandomPosition] = useState<number>(
+    Math.floor(Math.random() * 4)
+  );
 
   const question = data?.[questionNumber]?.question;
-  const randomPosition = Math.floor(Math.random() * 4);
   const incorrectAnswer = data?.[questionNumber]?.incorrectAnswers || [];
   const correctAnswer = data?.[questionNumber]?.correctAnswer;
 
   const answers = [...incorrectAnswer];
   answers?.splice(randomPosition, 0, data?.[questionNumber]?.correctAnswer);
+
+  const totalDelaySec = 10; //5000ms
+  const delay = (totalDelaySec * 1000) / 100; //ms
 
   const getQuestions = () => {
     setLoading(true);
@@ -62,9 +68,70 @@ export const CategoryPage: React.FC<TCategoryPage> = () => {
         setLoading(false);
         setQuestionNumber(0);
         setSelectedAnswers([]);
+        // updateProgress();
+        setPercent(0);
       })
       .catch((error) => setErrorMessage(error));
   };
+
+  let tm: NodeJS.Timeout;
+
+  const updateProgress = () => {
+    console.log(
+      "%cCategoryPage.tsx line:80 delay, per",
+      "color: #007acc;",
+      delay,
+      percent
+    );
+
+    if (percent >= 100) {
+      clearTimeout(tm);
+      return;
+    }
+    if (questionNumber < data?.length) {
+      clearTimeout(tm);
+      return;
+    }
+    setPercent((percent) => {
+      if (percent < 100) {
+        return percent + 1;
+      } else {
+        return percent;
+      }
+    });
+    tm = setTimeout(updateProgress, delay);
+  };
+
+  const restartProgress = () => {
+    clearTimeout(tm);
+    setPercent(0);
+    if (questionNumber + 1 <= data?.length) return;
+
+    updateProgress();
+  };
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setPercent((percent) => {
+        if (percent < 100) {
+          return percent + 1;
+        } else {
+          return percent;
+        }
+      });
+    }, delay);
+    return () => clearInterval(interval);
+  }, [questionNumber]);
+
+  useEffect(() => {
+    // updateProgress();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    if (percent === 100) selectAnswer("");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [percent]);
 
   useEffect(() => {
     getQuestions();
@@ -92,6 +159,8 @@ export const CategoryPage: React.FC<TCategoryPage> = () => {
   if (errorMessage) return <div>{errorMessage}</div>;
 
   const selectAnswer = (e: string) => {
+    if (questionNumber + 2 <= data?.length) restartProgress();
+
     const newSelection = [...selectedAnswers];
 
     newSelection.push({
@@ -102,7 +171,8 @@ export const CategoryPage: React.FC<TCategoryPage> = () => {
     });
 
     setSelectedAnswers(newSelection);
-    setQuestionNumber(questionNumber + 1);
+    setQuestionNumber((questionNumber) => questionNumber + 1);
+    setRandomPosition(Math.floor(Math.random() * 4));
   };
 
   return (
@@ -121,7 +191,7 @@ export const CategoryPage: React.FC<TCategoryPage> = () => {
           getQuestions={getQuestions}
         />
         {category}
-
+        <Line percent={percent} strokeWidth={1} strokeColor="green" />
         {questionNumber === data?.length ? (
           <>
             <div className="result">{score}</div>
